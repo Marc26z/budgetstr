@@ -43,7 +43,7 @@ export function useSaveEntry() {
         created_at: Math.floor(Date.now() / 1000),
         tags: [
           ['d', id],
-          ['alt', 'Encrypted NoteBudget entry'],
+          ['alt', 'Encrypted budgetstr entry'],
         ],
       });
 

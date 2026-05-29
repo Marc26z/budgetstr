@@ -1,8 +1,8 @@
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Repeat } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatAmount, type SharedEntry } from '@/lib/budget';
+import { formatAmount, recurrenceLabel, type SharedEntry } from '@/lib/budget';
 import { useAuthor } from '@/hooks/useAuthor';
 import { genUserName } from '@/lib/genUserName';
 
@@ -17,8 +17,8 @@ export function SharedEntryCard({ entry }: { entry: SharedEntry }) {
       <div
         className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
           isExpense
-            ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400'
-            : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
+            ? 'bg-rose-500/15 text-rose-500'
+            : 'bg-primary/15 text-primary'
         }`}
       >
         {isExpense ? <ArrowUpRight className="size-5" /> : <ArrowDownLeft className="size-5" />}
@@ -26,11 +26,17 @@ export function SharedEntryCard({ entry }: { entry: SharedEntry }) {
 
       <div className="min-w-0 flex-1">
         <p className="font-medium truncate">{entry.title}</p>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
           <span className="text-xs text-muted-foreground">{entry.date}</span>
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal">
             {entry.category}
           </Badge>
+          {entry.recurrence && entry.recurrence !== 'none' && (
+            <Badge className="text-[10px] px-1.5 py-0 font-normal gap-0.5 bg-primary/15 text-primary border-transparent hover:bg-primary/15">
+              <Repeat className="size-2.5" />
+              {recurrenceLabel(entry.recurrence)}
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-1.5 mt-1.5">
           <Avatar className="size-4">
@@ -44,7 +50,7 @@ export function SharedEntryCard({ entry }: { entry: SharedEntry }) {
       <div className="text-right">
         <p
           className={`font-semibold tabular-nums ${
-            isExpense ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+            isExpense ? 'text-rose-500' : 'text-primary'
           }`}
         >
           {isExpense ? '-' : '+'}

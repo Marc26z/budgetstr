@@ -23,9 +23,11 @@ import {
 import {
   CATEGORIES,
   CURRENCIES,
+  RECURRENCES,
   type BudgetEntry,
   type BudgetEntryPayload,
   type EntryType,
+  type Recurrence,
 } from '@/lib/budget';
 import { useSaveEntry } from '@/hooks/useEntryMutations';
 import { useToast } from '@/hooks/useToast';
@@ -50,6 +52,7 @@ export function EntryFormDialog({ open, onOpenChange, entry }: EntryFormDialogPr
   const [category, setCategory] = useState<string>('Other');
   const [date, setDate] = useState(today());
   const [note, setNote] = useState('');
+  const [recurrence, setRecurrence] = useState<Recurrence>('none');
 
   // Reset form whenever the dialog opens (or the entry being edited changes).
   useEffect(() => {
@@ -62,6 +65,7 @@ export function EntryFormDialog({ open, onOpenChange, entry }: EntryFormDialogPr
     setCategory(entry?.category ?? 'Other');
     setDate(entry?.date ?? today());
     setNote(entry?.note ?? '');
+    setRecurrence(entry?.recurrence ?? 'none');
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [open, entry]);
 
@@ -86,6 +90,7 @@ export function EntryFormDialog({ open, onOpenChange, entry }: EntryFormDialogPr
       note: note.trim(),
       date,
       createdAt: entry?.createdAt ?? Math.floor(Date.now() / 1000),
+      recurrence,
     };
 
     try {
@@ -119,7 +124,7 @@ export function EntryFormDialog({ open, onOpenChange, entry }: EntryFormDialogPr
               onClick={() => setType('expense')}
               className={`h-11 rounded-lg border text-sm font-medium transition-colors ${
                 type === 'expense'
-                  ? 'border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300'
+                  ? 'border-rose-500 bg-rose-500/15 text-rose-400'
                   : 'border-input text-muted-foreground hover:bg-accent'
               }`}
             >
@@ -130,7 +135,7 @@ export function EntryFormDialog({ open, onOpenChange, entry }: EntryFormDialogPr
               onClick={() => setType('income')}
               className={`h-11 rounded-lg border text-sm font-medium transition-colors ${
                 type === 'income'
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'
+                  ? 'border-primary bg-primary/15 text-primary'
                   : 'border-input text-muted-foreground hover:bg-accent'
               }`}
             >
@@ -206,6 +211,26 @@ export function EntryFormDialog({ open, onOpenChange, entry }: EntryFormDialogPr
                 onChange={(e) => setDate(e.target.value)}
                 className="text-base md:text-sm"
               />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Repeats</Label>
+            <div className="grid grid-cols-5 gap-1.5">
+              {RECURRENCES.map((r) => (
+                <button
+                  key={r.value}
+                  type="button"
+                  onClick={() => setRecurrence(r.value)}
+                  className={`h-9 rounded-lg border text-xs font-medium transition-colors ${
+                    recurrence === r.value
+                      ? 'border-primary bg-primary/15 text-primary'
+                      : 'border-input text-muted-foreground hover:bg-accent'
+                  }`}
+                >
+                  {r.short}
+                </button>
+              ))}
             </div>
           </div>
 

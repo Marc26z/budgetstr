@@ -79,7 +79,7 @@ export function useSaveContacts() {
         created_at: Math.floor(Date.now() / 1000),
         tags: [
           ['d', CONTACTS_D_TAG],
-          ['alt', 'NoteBudget private contacts'],
+          ['alt', 'budgetstr private contacts'],
         ],
       });
 

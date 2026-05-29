@@ -38,6 +38,7 @@ export function useShareEntry() {
         note: entry.note,
         date: entry.date,
         createdAt: entry.createdAt,
+        recurrence: entry.recurrence ?? 'none',
         entryId: entry.id,
         sharedBy: myNpub,
       };
@@ -56,7 +57,7 @@ export function useShareEntry() {
           tags: [
             ['p', recipient],
             ['entry', entry.id],
-            ['alt', 'A budget entry shared with you on NoteBudget'],
+            ['alt', 'A budget entry shared with you on budgetstr'],
           ],
         });
 

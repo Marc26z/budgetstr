@@ -8,7 +8,7 @@ const Index = () => {
   const { user } = useCurrentUser();
 
   useSeoMeta({
-    title: 'NoteBudget — Private, Encrypted Budgeting on Nostr',
+    title: 'budgetstr — Private, Encrypted Budgeting on Nostr',
     description:
       'Track your budget privately with end-to-end (NIP-44) encryption, log in with a key from your password manager, and securely share entries with people you trust.',
   });

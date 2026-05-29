@@ -9,6 +9,23 @@ export const CONTACTS_D_TAG = 'notebudget/contacts';
 
 export type EntryType = 'expense' | 'income';
 
+/** How often an entry repeats. `none` is a one-off entry. */
+export type Recurrence = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+/** Recurrence options for the picker, in display order. */
+export const RECURRENCES: { value: Recurrence; label: string; short: string }[] = [
+  { value: 'none', label: 'One-time', short: 'Once' },
+  { value: 'daily', label: 'Daily', short: 'Daily' },
+  { value: 'weekly', label: 'Weekly', short: 'Weekly' },
+  { value: 'monthly', label: 'Monthly', short: 'Monthly' },
+  { value: 'yearly', label: 'Yearly', short: 'Yearly' },
+];
+
+/** Human-readable label for a recurrence value. */
+export function recurrenceLabel(recurrence: Recurrence): string {
+  return RECURRENCES.find((r) => r.value === recurrence)?.short ?? 'Once';
+}
+
 /** The decrypted JSON payload stored inside an entry's content. */
 export interface BudgetEntryPayload {
   title: string;
@@ -19,6 +36,8 @@ export interface BudgetEntryPayload {
   note: string;
   date: string; // ISO date (yyyy-mm-dd)
   createdAt: number; // unix seconds
+  /** How often this entry repeats. Defaults to 'none' for legacy entries. */
+  recurrence?: Recurrence;
 }
 
 /** A decrypted budget entry owned by the current user. */

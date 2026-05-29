@@ -34,8 +34,8 @@ export function BudgetSummary({ entries }: { entries: BudgetEntry[] }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-      <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-5 shadow-lg shadow-emerald-500/20 sm:col-span-1">
-        <div className="flex items-center gap-2 text-emerald-50/90 text-sm">
+      <div className="rounded-2xl bg-gradient-to-br from-[#39ff14] to-[#14ff8c] text-black p-5 shadow-lg shadow-primary/30 sm:col-span-1">
+        <div className="flex items-center gap-2 text-black/70 text-sm font-medium">
           <Wallet className="size-4" /> Balance
         </div>
         <p className="text-2xl sm:text-3xl font-bold mt-2 tabular-nums break-words">
@@ -45,18 +45,18 @@ export function BudgetSummary({ entries }: { entries: BudgetEntry[] }) {
 
       <div className="rounded-2xl border bg-card p-5">
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <TrendingUp className="size-4 text-emerald-600" /> Income
+          <TrendingUp className="size-4 text-primary" /> Income
         </div>
-        <p className="text-xl sm:text-2xl font-semibold mt-2 tabular-nums text-emerald-600 dark:text-emerald-400 break-words">
+        <p className="text-xl sm:text-2xl font-semibold mt-2 tabular-nums text-primary break-words">
           {formatAmount(income, currency)}
         </p>
       </div>
 
       <div className="rounded-2xl border bg-card p-5">
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <TrendingDown className="size-4 text-rose-600" /> Expenses
+          <TrendingDown className="size-4 text-rose-500" /> Expenses
         </div>
-        <p className="text-xl sm:text-2xl font-semibold mt-2 tabular-nums text-rose-600 dark:text-rose-400 break-words">
+        <p className="text-xl sm:text-2xl font-semibold mt-2 tabular-nums text-rose-500 break-words">
           {formatAmount(expense, currency)}
         </p>
       </div>

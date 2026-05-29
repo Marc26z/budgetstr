@@ -38,9 +38,9 @@ export function BudgetLogin() {
 
   const username = generated
     ? nip19.npubEncode(getPublicKey(nip19.decode(generated).data as Uint8Array))
-    : nsec && validateNsec(nsec)
+      : nsec && validateNsec(nsec)
       ? safeNpub(nsec)
-      : 'notebudget';
+      : 'budgetstr';
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,10 +95,10 @@ export function BudgetLogin() {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 mb-4">
+        <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-gradient-to-br from-[#39ff14] to-[#14ff8c] text-black shadow-lg shadow-primary/30 mb-4">
           <KeyRound className="size-8" />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">NoteBudget</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-primary drop-shadow-[0_0_12px_rgba(57,255,20,0.45)]">budgetstr</h1>
         <p className="text-muted-foreground mt-2 text-base">
           Private, encrypted budgeting on Nostr.
         </p>
@@ -150,7 +150,7 @@ export function BudgetLogin() {
                 </div>
                 {error && <p className="text-sm text-destructive">{error}</p>}
                 <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-                  <ShieldCheck className="size-3.5 mt-0.5 shrink-0 text-emerald-600" />
+                  <ShieldCheck className="size-3.5 mt-0.5 shrink-0 text-primary" />
                   Save your nsec in your password manager — it's the only key to your budget.
                 </p>
               </div>
@@ -217,7 +217,7 @@ export function BudgetLogin() {
                           className="px-2 text-muted-foreground hover:text-foreground"
                           aria-label="Copy key"
                         >
-                          {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+                          {copied ? <Check className="size-4 text-primary" /> : <Copy className="size-4" />}
                         </button>
                       </div>
                     </div>
@@ -265,9 +265,9 @@ export function BudgetLogin() {
 function safeNpub(nsec: string): string {
   try {
     const decoded = nip19.decode(nsec.trim());
-    if (decoded.type !== 'nsec') return 'notebudget';
+    if (decoded.type !== 'nsec') return 'budgetstr';
     return nip19.npubEncode(getPublicKey(decoded.data));
   } catch {
-    return 'notebudget';
+    return 'budgetstr';
   }
 }

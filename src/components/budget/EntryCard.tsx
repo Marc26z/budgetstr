@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MoreVertical, Pencil, Share2, Trash2, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { MoreVertical, Pencil, Share2, Trash2, ArrowDownLeft, ArrowUpRight, Repeat } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatAmount, type BudgetEntry } from '@/lib/budget';
+import { formatAmount, recurrenceLabel, type BudgetEntry } from '@/lib/budget';
 import { useDeleteEntry } from '@/hooks/useEntryMutations';
 import { useToast } from '@/hooks/useToast';
 
@@ -56,8 +56,8 @@ export function EntryCard({ entry, onEdit, onShare }: EntryCardProps) {
       <div
         className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
           isExpense
-            ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400'
-            : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
+            ? 'bg-rose-500/15 text-rose-500'
+            : 'bg-primary/15 text-primary'
         }`}
       >
         {isExpense ? <ArrowUpRight className="size-5" /> : <ArrowDownLeft className="size-5" />}
@@ -67,11 +67,17 @@ export function EntryCard({ entry, onEdit, onShare }: EntryCardProps) {
         <div className="flex items-center gap-2">
           <p className="font-medium truncate">{entry.title}</p>
         </div>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
           <span className="text-xs text-muted-foreground">{entry.date}</span>
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal">
             {entry.category}
           </Badge>
+          {entry.recurrence && entry.recurrence !== 'none' && (
+            <Badge className="text-[10px] px-1.5 py-0 font-normal gap-0.5 bg-primary/15 text-primary border-transparent hover:bg-primary/15">
+              <Repeat className="size-2.5" />
+              {recurrenceLabel(entry.recurrence)}
+            </Badge>
+          )}
         </div>
         {entry.note && (
           <p className="text-xs text-muted-foreground truncate mt-1">{entry.note}</p>
@@ -81,7 +87,7 @@ export function EntryCard({ entry, onEdit, onShare }: EntryCardProps) {
       <div className="text-right">
         <p
           className={`font-semibold tabular-nums ${
-            isExpense ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+            isExpense ? 'text-rose-500' : 'text-primary'
           }`}
         >
           {isExpense ? '-' : '+'}

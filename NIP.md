@@ -1,6 +1,6 @@
-# NoteBudget — Custom Event Kinds
+# budgetstr — Custom Event Kinds
 
-NoteBudget is an encrypted, shareable budgeting client built on Nostr. All
+budgetstr is an encrypted, shareable budgeting client built on Nostr. All
 financial data is end-to-end encrypted with **NIP-44** before it ever leaves
 the device. Relays only ever see ciphertext.
 
@@ -15,7 +15,7 @@ A single budget entry (an income or expense line item) owned by its author.
 - **Tags**:
   - `d` — required, a unique identifier for the entry (UUID).
   - `alt` — required, NIP-31 human-readable description
-    (`"Encrypted NoteBudget entry"`).
+    (`"Encrypted budgetstr entry"`).
 
 ### Decrypted JSON payload
 
@@ -28,12 +28,14 @@ A single budget entry (an income or expense line item) owned by its author.
   "category": "Food",
   "note": "Weekly shop",
   "date": "2026-05-28",        // ISO date
-  "createdAt": 1748390400      // unix seconds
+  "createdAt": 1748390400,     // unix seconds
+  "recurrence": "monthly"      // "none" | "daily" | "weekly" | "monthly" | "yearly"
 }
 ```
 
-Because the entire payload is encrypted, none of these fields are queryable at
-the relay level — that is intentional for privacy.
+`recurrence` is optional; entries without it are treated as one-time
+(`"none"`). Because the entire payload is encrypted, none of these fields are
+queryable at the relay level — that is intentional for privacy.
 
 ## Kind 1431 — Shared Budget Entry (regular, recipient-encrypted)
 
@@ -49,11 +51,10 @@ recipient) can read it.
 - **Tags**:
   - `p` — required, the recipient's pubkey (hex). Lets the recipient query
     shared entries with `{ kinds: [1431], '#p': [myPubkey] }`.
-  - `e` or `d` reference — `entry` tag carrying the original entry's `d`
-    identifier so re-shares of the same entry can be de-duplicated /
-    updated client-side.
+  - `entry` — the original entry's `d` identifier so re-shares of the same
+    entry can be de-duplicated / updated client-side.
   - `alt` — required, NIP-31 human-readable description
-    (`"A budget entry shared with you on NoteBudget"`).
+    (`"A budget entry shared with you on budgetstr"`).
 
 ### Decrypted JSON payload
 
@@ -67,6 +68,7 @@ recipient) can read it.
   "note": "Weekly shop",
   "date": "2026-05-28",
   "createdAt": 1748390400,
+  "recurrence": "monthly",
   "entryId": "uuid-of-original-entry",
   "sharedBy": "npub1..."
 }
@@ -81,7 +83,7 @@ The user's list of people they share budgets with is stored as a private,
 self-encrypted application-data event:
 
 - **Kind**: `30078` (NIP-78 application-specific data, addressable)
-- **`d` tag**: `notebudget/contacts`
+- **`d` tag**: `notebudget/contacts` (kept stable for backward compatibility)
 - **Content**: NIP-44 ciphertext (encrypted to self) of a JSON array of
   `{ "pubkey": "<hex>", "name": "<optional label>" }` objects.
-- **`alt` tag**: `"NoteBudget private contacts"`.
+- **`alt` tag**: `"budgetstr private contacts"`.
