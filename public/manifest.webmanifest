@@ -1,0 +1,17 @@
+{
+  "name": "NoteBudget",
+  "short_name": "NoteBudget",
+  "description": "Private, encrypted budgeting on Nostr. Log in with a key from your password manager and securely share entries with people you trust.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
