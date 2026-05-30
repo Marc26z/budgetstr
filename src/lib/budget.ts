@@ -119,6 +119,105 @@ export function newEntryId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+// ---------------------------------------------------------------------------
+// Monthly budget math
+// ---------------------------------------------------------------------------
+
+/** The minimal shape needed to compute a monthly contribution. */
+export interface RecurringLike {
+  amount: number;
+  date: string; // ISO start/anchor date (yyyy-mm-dd)
+  recurrence?: Recurrence;
+}
+
+/** Number of days in the given month (0-indexed month). */
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+/** Parse a `yyyy-mm-dd` string into a local Date (midnight). Returns null if invalid. */
+export function parseEntryDate(date: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!m) {
+    const d = new Date(date);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * How much a (possibly recurring) entry contributes to the given month.
+ *
+ * Rules:
+ * - `none`: counts only if the entry's date falls within the month.
+ * - `daily`: amount × number of days in the month (only once the anchor date
+ *   has started, i.e. not for months before the entry began).
+ * - `weekly`: amount × number of weekly occurrences that land in the month.
+ * - `monthly`: amount once per month (once the anchor month has begun).
+ * - `yearly`: amount only in the anniversary month (its "due date"); 0 in all
+ *   other months. Yearly items are otherwise handled via the savings field.
+ *
+ * `year` is the full year, `month` is 0-indexed (0 = January).
+ */
+export function monthlyContribution(
+  entry: RecurringLike,
+  year: number,
+  month: number,
+): number {
+  const recurrence = entry.recurrence ?? 'none';
+  const start = parseEntryDate(entry.date);
+  if (!start) return 0;
+
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month, daysInMonth(year, month));
+
+  // Nothing recurs before it begins.
+  const startsAfterMonth = start > monthEnd;
+
+  switch (recurrence) {
+    case 'none':
+      return start >= monthStart && start <= monthEnd ? entry.amount : 0;
+
+    case 'daily': {
+      if (startsAfterMonth) return 0;
+      // Count days in the month on/after the anchor date.
+      const from = start > monthStart ? start : monthStart;
+      const days = Math.floor((monthEnd.getTime() - from.getTime()) / 86_400_000) + 1;
+      return entry.amount * Math.max(0, days);
+    }
+
+    case 'weekly': {
+      if (startsAfterMonth) return 0;
+      // Count weekly anniversaries (every 7 days from the anchor) in the month.
+      let occurrences = 0;
+      const cursor = new Date(start);
+      // Fast-forward to the first occurrence within or after the month start.
+      if (cursor < monthStart) {
+        const weeks = Math.ceil((monthStart.getTime() - cursor.getTime()) / (7 * 86_400_000));
+        cursor.setDate(cursor.getDate() + weeks * 7);
+      }
+      while (cursor <= monthEnd) {
+        occurrences++;
+        cursor.setDate(cursor.getDate() + 7);
+      }
+      return entry.amount * occurrences;
+    }
+
+    case 'monthly':
+      return startsAfterMonth ? 0 : entry.amount;
+
+    case 'yearly': {
+      // Only counts in its anniversary (due) month, and not before it began.
+      if (startsAfterMonth) return 0;
+      return start.getMonth() === month ? entry.amount : 0;
+    }
+
+    default:
+      return 0;
+  }
+}
+
 /** Type guard for a decoded entry payload. */
 export function isBudgetEntryPayload(value: unknown): value is BudgetEntryPayload {
   if (typeof value !== 'object' || value === null) return false;

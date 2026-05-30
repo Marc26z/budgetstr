@@ -4,6 +4,26 @@ budgetstr is an encrypted, shareable budgeting client built on Nostr. All
 financial data is end-to-end encrypted with **NIP-44** before it ever leaves
 the device. Relays only ever see ciphertext.
 
+## Monthly balance semantics
+
+The dashboard computes Balance, Income, and Expenses for the **current
+calendar month** based on each entry's recurrence:
+
+| Recurrence | Current-month contribution |
+|------------|---------------------------|
+| `none` | Counts only if the entry's date falls in this month |
+| `daily` | `amount × days_active_in_month` |
+| `weekly` | `amount × occurrences_in_month` (counting from anchor date every 7 days) |
+| `monthly` | `amount` (once per month, from the anchor month onward) |
+| `yearly` | Counted only in the entry's anniversary month (due date); **deferred** from the balance in all other months |
+
+Yearly expenses are aggregated into a separate **"Yearly expenses savings"**
+field, which shows: (a) the annual total of all yearly expense amounts, and
+(b) a suggested monthly set-aside (`annual_total / 12`). This field is
+informational — it does **not** reduce the monthly balance, giving the user a
+clear picture of what to save each month for upcoming annual bills while
+keeping the monthly budget free from "phantom" deductions.
+
 ## Kind 34529 — Budget Entry (addressable, owner-private)
 
 A single budget entry (an income or expense line item) owned by its author.
