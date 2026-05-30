@@ -15,6 +15,7 @@ import { SharedEntryCard } from './SharedEntryCard';
 import { EntryFormDialog } from './EntryFormDialog';
 import { ShareDialog } from './ShareDialog';
 import { ContactsDialog } from './ContactsDialog';
+import { PartnersDialog } from './PartnersDialog';
 
 export function BudgetDashboard() {
   const { data: entries = [], isLoading } = useBudgetEntries();
@@ -25,6 +26,8 @@ export function BudgetDashboard() {
   const [shareOpen, setShareOpen] = useState(false);
   const [sharingEntry, setSharingEntry] = useState<BudgetEntry | null>(null);
   const [contactsOpen, setContactsOpen] = useState(false);
+  const [partnersOpen, setPartnersOpen] = useState(false);
+  const [sharedBalance, setSharedBalance] = useState(true);
 
   const openNew = () => {
     setEditing(null);
@@ -43,10 +46,13 @@ export function BudgetDashboard() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <BudgetHeader onManageContacts={() => setContactsOpen(true)} />
+      <BudgetHeader
+        onManageContacts={() => setContactsOpen(true)}
+        onManagePartners={() => setPartnersOpen(true)}
+      />
 
       <main className="mx-auto max-w-3xl px-4 py-6 space-y-6 pb-28">
-        <BudgetSummary entries={entries} />
+        <BudgetSummary shared={sharedBalance} onSharedChange={setSharedBalance} />
 
         <Tabs defaultValue="mine" className="w-full">
           <TabsList className="grid w-full grid-cols-2 max-w-xs">
@@ -119,6 +125,7 @@ export function BudgetDashboard() {
         onManageContacts={() => setContactsOpen(true)}
       />
       <ContactsDialog open={contactsOpen} onOpenChange={setContactsOpen} />
+      <PartnersDialog open={partnersOpen} onOpenChange={setPartnersOpen} />
     </div>
   );
 }

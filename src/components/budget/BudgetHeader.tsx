@@ -1,13 +1,14 @@
-import { KeyRound, Users } from 'lucide-react';
+import { Heart, KeyRound, Users } from 'lucide-react';
 
 import { LoginArea } from '@/components/auth/LoginArea';
 import { Button } from '@/components/ui/button';
 
 interface BudgetHeaderProps {
   onManageContacts: () => void;
+  onManagePartners: () => void;
 }
 
-export function BudgetHeader({ onManageContacts }: BudgetHeaderProps) {
+export function BudgetHeader({ onManageContacts, onManagePartners }: BudgetHeaderProps) {
   return (
     <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-3xl px-4 h-16 flex items-center justify-between gap-2">
@@ -19,6 +20,15 @@ export function BudgetHeader({ onManageContacts }: BudgetHeaderProps) {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onManagePartners}
+            aria-label="Shared balance"
+            title="Shared balance"
+          >
+            <Heart className="size-5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"

@@ -6,6 +6,8 @@ export const BUDGET_ENTRY_KIND = 34529;
 export const SHARED_ENTRY_KIND = 1431;
 /** NIP-78 application-data identifier for the private contacts list. */
 export const CONTACTS_D_TAG = 'notebudget/contacts';
+/** NIP-78 application-data identifier for the private shared-balance partners list. */
+export const PARTNERS_D_TAG = 'budgetstr/partners';
 
 export type EntryType = 'expense' | 'income';
 
@@ -60,6 +62,16 @@ export interface SharedEntry extends SharedEntryPayload {
 }
 
 export interface Contact {
+  pubkey: string; // hex
+  name?: string;
+}
+
+/**
+ * A shared-balance partner (e.g. a spouse). When you add a partner, every
+ * entry you create is automatically shared with them, and their entries are
+ * pooled into your combined balance, income, and expense totals.
+ */
+export interface Partner {
   pubkey: string; // hex
   name?: string;
 }

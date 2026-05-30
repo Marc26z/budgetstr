@@ -87,3 +87,22 @@ self-encrypted application-data event:
 - **Content**: NIP-44 ciphertext (encrypted to self) of a JSON array of
   `{ "pubkey": "<hex>", "name": "<optional label>" }` objects.
 - **`alt` tag**: `"budgetstr private contacts"`.
+
+## Shared-balance partners list
+
+A separate private list of "partners" (e.g. a spouse) whose budgets are pooled
+into a combined balance. When a partner is linked, every entry the user creates
+is automatically shared with them (a kind 1431 event, see above), and entries
+shared **by** confirmed partners are summed into the user's combined Balance,
+Income, and Expense totals.
+
+- **Kind**: `30078` (NIP-78 application-specific data, addressable)
+- **`d` tag**: `budgetstr/partners`
+- **Content**: NIP-44 ciphertext (encrypted to self) of a JSON array of
+  `{ "pubkey": "<hex>", "name": "<optional label>" }` objects.
+- **`alt` tag**: `"budgetstr shared-balance partners"`.
+
+A two-way shared balance requires each partner to add the other; each side
+independently shares its entries with the other, encrypted end-to-end. To stop
+sharing, a partner is removed from this list (existing shared copies can be
+revoked via NIP-09 deletion).
