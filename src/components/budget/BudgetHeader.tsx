@@ -1,4 +1,4 @@
-import { Heart, KeyRound, Users } from 'lucide-react';
+import { Heart, KeyRound, PiggyBank, Users } from 'lucide-react';
 
 import { LoginArea } from '@/components/auth/LoginArea';
 import { Button } from '@/components/ui/button';
@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 interface BudgetHeaderProps {
   onManageContacts: () => void;
   onManagePartners: () => void;
+  onManagePiggyBank: () => void;
 }
 
-export function BudgetHeader({ onManageContacts, onManagePartners }: BudgetHeaderProps) {
+export function BudgetHeader({ onManageContacts, onManagePartners, onManagePiggyBank }: BudgetHeaderProps) {
   return (
     <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-3xl px-4 h-16 flex items-center justify-between gap-2">
@@ -19,7 +20,16 @@ export function BudgetHeader({ onManageContacts, onManagePartners }: BudgetHeade
           <span className="font-bold text-lg tracking-tight text-primary drop-shadow-[0_0_8px_rgba(57,255,20,0.4)]">budgetstr</span>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onManagePiggyBank}
+            aria-label="Piggy bank"
+            title="Piggy bank"
+          >
+            <PiggyBank className="size-5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"

@@ -16,6 +16,8 @@ import { EntryFormDialog } from './EntryFormDialog';
 import { ShareDialog } from './ShareDialog';
 import { ContactsDialog } from './ContactsDialog';
 import { PartnersDialog } from './PartnersDialog';
+import { PiggyBankDialog } from './PiggyBankDialog';
+import { PiggyBankCard } from './PiggyBankCard';
 
 export function BudgetDashboard() {
   const { data: entries = [], isLoading } = useBudgetEntries();
@@ -27,6 +29,7 @@ export function BudgetDashboard() {
   const [sharingEntry, setSharingEntry] = useState<BudgetEntry | null>(null);
   const [contactsOpen, setContactsOpen] = useState(false);
   const [partnersOpen, setPartnersOpen] = useState(false);
+  const [piggyBankOpen, setPiggyBankOpen] = useState(false);
   const [sharedBalance, setSharedBalance] = useState(true);
 
   const openNew = () => {
@@ -49,10 +52,12 @@ export function BudgetDashboard() {
       <BudgetHeader
         onManageContacts={() => setContactsOpen(true)}
         onManagePartners={() => setPartnersOpen(true)}
+        onManagePiggyBank={() => setPiggyBankOpen(true)}
       />
 
       <main className="mx-auto max-w-3xl px-4 py-6 space-y-6 pb-28">
         <BudgetSummary shared={sharedBalance} onSharedChange={setSharedBalance} />
+        <PiggyBankCard onManageAccounts={() => setPiggyBankOpen(true)} />
 
         <Tabs defaultValue="mine" className="w-full">
           <TabsList className="grid w-full grid-cols-2 max-w-xs">
@@ -126,6 +131,7 @@ export function BudgetDashboard() {
       />
       <ContactsDialog open={contactsOpen} onOpenChange={setContactsOpen} />
       <PartnersDialog open={partnersOpen} onOpenChange={setPartnersOpen} />
+      <PiggyBankDialog open={piggyBankOpen} onOpenChange={setPiggyBankOpen} />
     </div>
   );
 }

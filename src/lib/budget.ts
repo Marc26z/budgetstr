@@ -8,6 +8,8 @@ export const SHARED_ENTRY_KIND = 1431;
 export const CONTACTS_D_TAG = 'notebudget/contacts';
 /** NIP-78 application-data identifier for the private shared-balance partners list. */
 export const PARTNERS_D_TAG = 'budgetstr/partners';
+/** NIP-78 application-data identifier for the private piggy bank accounts list. */
+export const PIGGYBANK_D_TAG = 'budgetstr/piggybank';
 
 export type EntryType = 'expense' | 'income';
 
@@ -74,6 +76,27 @@ export interface Contact {
 export interface Partner {
   pubkey: string; // hex
   name?: string;
+}
+
+/** Known piggy bank provider presets for quick setup. */
+export const PIGGYBANK_PROVIDERS = [
+  { id: 'river', label: 'River', placeholder: 'username@river.com' },
+  { id: 'strike', label: 'Strike', placeholder: 'username@strike.me' },
+  { id: 'cashapp', label: 'Cash App', placeholder: '$cashtag@cash.app' },
+  { id: 'albyhub', label: 'Alby Hub', placeholder: 'username@getalby.com' },
+  { id: 'custom', label: 'Other', placeholder: 'username@domain.com' },
+] as const;
+
+/** A saved lightning address the user sends monthly savings to. */
+export interface PiggyBankAccount {
+  /** UUID. */
+  id: string;
+  /** Human-friendly label (e.g. "River savings"). */
+  label: string;
+  /** Lightning address (user@domain). */
+  address: string;
+  /** Optional provider key for icon/display. */
+  provider?: string;
 }
 
 /** Common currencies for the picker. */

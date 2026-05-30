@@ -126,3 +126,31 @@ A two-way shared balance requires each partner to add the other; each side
 independently shares its entries with the other, encrypted end-to-end. To stop
 sharing, a partner is removed from this list (existing shared copies can be
 revoked via NIP-09 deletion).
+
+## Piggy bank (lightning savings accounts)
+
+A private list of lightning addresses the user sends savings to (e.g.
+River, Strike, Cash App, Alby Hub). Each account stores a label, the
+lightning address, and an optional provider key.
+
+- **Kind**: `30078` (NIP-78 application-specific data, addressable)
+- **`d` tag**: `budgetstr/piggybank`
+- **Content**: NIP-44 ciphertext (encrypted to self) of a JSON array of
+  account objects:
+
+```json
+[
+  {
+    "id": "uuid",
+    "label": "River savings",
+    "address": "username@river.com",
+    "provider": "river"
+  }
+]
+```
+
+- **`alt` tag**: `"budgetstr piggy bank accounts"`.
+
+The dashboard renders each account with a clickable `lightning:` URI link and
+a QR code button so the user can quickly scan or tap to send funds from any
+wallet.
