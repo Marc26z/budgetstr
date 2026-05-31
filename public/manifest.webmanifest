@@ -4,8 +4,8 @@
   "description": "Private, encrypted budgeting on Nostr. Log in with a key from your password manager and securely share entries with people you trust.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#39ff14",
+  "background_color": "#0c1225",
+  "theme_color": "#2dd4bf",
   "icons": [
     {
       "src": "/favicon.svg",

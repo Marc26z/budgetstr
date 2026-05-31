@@ -80,15 +80,15 @@ export function BudgetSummary({ shared, onSharedChange }: BudgetSummaryProps) {
       {/* Main cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Balance — neon green hero card */}
-        <div className="rounded-2xl bg-gradient-to-br from-[#39ff14] to-[#14ff8c] text-black p-5 shadow-lg shadow-primary/30 sm:col-span-1">
-          <div className="flex items-center gap-2 text-black/70 text-sm font-medium">
+        <div className="rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white p-5 shadow-lg shadow-primary/30 sm:col-span-1">
+          <div className="flex items-center gap-2 text-white/80 text-sm font-medium">
             {shared && hasPartners ? <Users className="size-4" /> : <Wallet className="size-4" />}
             {shared && hasPartners ? 'Shared balance' : 'Balance'}
           </div>
           <p className="text-2xl sm:text-3xl font-bold mt-2 tabular-nums break-words">
             {formatAmount(active.balance, active.currency)}
           </p>
-          <p className="text-xs text-black/55 mt-1">This month</p>
+          <p className="text-xs text-white/55 mt-1">This month</p>
         </div>
 
         {/* Income */}

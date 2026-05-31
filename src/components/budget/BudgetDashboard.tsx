@@ -122,7 +122,7 @@ export function BudgetDashboard() {
       <button
         onClick={openNew}
         aria-label="Add entry"
-        className="fixed bottom-6 right-6 z-40 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-[#39ff14] to-[#14ff8c] text-black shadow-lg shadow-primary/40 transition-transform hover:scale-105 active:scale-95"
+        className="fixed bottom-6 right-6 z-40 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg shadow-primary/40 transition-transform hover:scale-105 active:scale-95"
       >
         <Plus className="size-7" />
       </button>

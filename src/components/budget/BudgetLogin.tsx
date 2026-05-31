@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff, KeyRound, Loader2, ShieldCheck, Sparkles, Copy, Check } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ShieldCheck, Sparkles, Copy, Check } from 'lucide-react';
 import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools';
 
 import { Button } from '@/components/ui/button';
@@ -95,10 +95,12 @@ export function BudgetLogin() {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-gradient-to-br from-[#39ff14] to-[#14ff8c] text-black shadow-lg shadow-primary/30 mb-4">
-          <KeyRound className="size-8" />
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight text-primary drop-shadow-[0_0_12px_rgba(57,255,20,0.45)]">budgetstr</h1>
+        <img
+          src="/logo.jpg"
+          alt="budgetstr"
+          className="size-24 rounded-2xl object-cover shadow-lg shadow-primary/25 mb-2"
+        />
+        <h1 className="text-3xl font-bold tracking-tight text-primary drop-shadow-[0_0_12px_rgba(45,212,191,0.4)]">budgetstr</h1>
         <p className="text-muted-foreground mt-2 text-base">
           Private, encrypted budgeting on Nostr.
         </p>
