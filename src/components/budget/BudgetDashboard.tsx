@@ -18,6 +18,8 @@ import { ContactsDialog } from './ContactsDialog';
 import { PartnersDialog } from './PartnersDialog';
 import { PiggyBankDialog } from './PiggyBankDialog';
 import { PiggyBankCard } from './PiggyBankCard';
+import { CategoriesDialog } from './CategoriesDialog';
+import { CategoryBudgetCards } from './CategoryBudgetCards';
 
 export function BudgetDashboard() {
   const { data: entries = [], isLoading } = useBudgetEntries();
@@ -30,6 +32,7 @@ export function BudgetDashboard() {
   const [contactsOpen, setContactsOpen] = useState(false);
   const [partnersOpen, setPartnersOpen] = useState(false);
   const [piggyBankOpen, setPiggyBankOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [sharedBalance, setSharedBalance] = useState(true);
 
   const openNew = () => {
@@ -53,10 +56,12 @@ export function BudgetDashboard() {
         onManageContacts={() => setContactsOpen(true)}
         onManagePartners={() => setPartnersOpen(true)}
         onManagePiggyBank={() => setPiggyBankOpen(true)}
+        onManageCategories={() => setCategoriesOpen(true)}
       />
 
       <main className="mx-auto max-w-3xl px-4 py-6 space-y-6 pb-28">
         <BudgetSummary shared={sharedBalance} onSharedChange={setSharedBalance} />
+        <CategoryBudgetCards shared={sharedBalance} onManageCategories={() => setCategoriesOpen(true)} />
         <PiggyBankCard onManageAccounts={() => setPiggyBankOpen(true)} />
 
         <Tabs defaultValue="mine" className="w-full">
@@ -132,6 +137,7 @@ export function BudgetDashboard() {
       <ContactsDialog open={contactsOpen} onOpenChange={setContactsOpen} />
       <PartnersDialog open={partnersOpen} onOpenChange={setPartnersOpen} />
       <PiggyBankDialog open={piggyBankOpen} onOpenChange={setPiggyBankOpen} />
+      <CategoriesDialog open={categoriesOpen} onOpenChange={setCategoriesOpen} />
     </div>
   );
 }

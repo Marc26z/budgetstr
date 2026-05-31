@@ -23,6 +23,8 @@ export interface CombinedTotals {
   /** Suggested monthly set-aside to cover yearly expenses (yearlySavings / 12). */
   yearlyMonthlySetAside: number;
   currency: string;
+  /** Per-category expense total for the current month (same currency). */
+  categorySpending: Map<string, number>;
 }
 
 /**
@@ -36,6 +38,7 @@ export interface CombinedItem {
   currency: string;
   date: string;
   recurrence: Recurrence;
+  category: string;
   /** hex pubkey of whoever the entry belongs to (self or partner). */
   ownerPubkey: string;
   /** True when the item came from a partner rather than the current user. */
@@ -75,6 +78,7 @@ export function useCombinedBudget(selfPubkey: string | undefined) {
       currency: e.currency,
       date: e.date,
       recurrence: e.recurrence ?? 'none',
+      category: e.category,
       ownerPubkey: selfPubkey ?? '',
       isPartner: false,
     }));
@@ -94,6 +98,7 @@ export function useCombinedBudget(selfPubkey: string | undefined) {
         currency: e.currency,
         date: e.date,
         recurrence: e.recurrence ?? 'none',
+        category: e.category,
         ownerPubkey: e.sharerPubkey,
         isPartner: true,
       });
@@ -147,6 +152,7 @@ function computeTotals(items: CombinedItem[]): CombinedTotals {
   let income = 0;
   let expense = 0;
   let yearlySavings = 0;
+  const categorySpending = new Map<string, number>();
 
   for (const i of items) {
     if (i.currency !== currency) continue;
@@ -160,8 +166,14 @@ function computeTotals(items: CombinedItem[]): CombinedTotals {
     const contribution = monthlyContribution(i, year, month);
     if (contribution === 0) continue;
 
-    if (i.type === 'income') income += contribution;
-    else expense += contribution;
+    if (i.type === 'income') {
+      income += contribution;
+    } else {
+      expense += contribution;
+      // Track per-category spend for budget tracking.
+      const cat = i.category || 'Other';
+      categorySpending.set(cat, (categorySpending.get(cat) ?? 0) + contribution);
+    }
   }
 
   return {
@@ -171,5 +183,6 @@ function computeTotals(items: CombinedItem[]): CombinedTotals {
     yearlySavings,
     yearlyMonthlySetAside: yearlySavings / 12,
     currency,
+    categorySpending,
   };
 }

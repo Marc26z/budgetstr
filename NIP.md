@@ -154,3 +154,30 @@ lightning address, and an optional provider key.
 The dashboard renders each account with a clickable `lightning:` URI link and
 a QR code button so the user can quickly scan or tap to send funds from any
 wallet.
+
+## Category budgets
+
+A private list of spending categories, each with an optional monthly budget.
+The user can add, remove, and rename categories. When a budget is set, the
+dashboard tracks current-month expense entries in that category against it
+and shows a progress bar (spent vs budgeted).
+
+- **Kind**: `30078` (NIP-78 application-specific data, addressable)
+- **`d` tag**: `budgetstr/categories`
+- **Content**: NIP-44 ciphertext (encrypted to self) of a JSON array:
+
+```json
+[
+  { "name": "Food", "budget": 400, "currency": "USD" },
+  { "name": "Housing", "budget": 1200, "currency": "USD" },
+  { "name": "Fun", "budget": 100, "currency": "USD" }
+]
+```
+
+- **`alt` tag**: `"budgetstr category budgets"`.
+
+When the user has not published a category list, a set of built-in defaults is
+used (Food, Housing, Transport, Utilities, Health, Entertainment, Shopping,
+Salary, Gift, Other) — all with `budget: 0` (no limit). Entries created before
+categories were customized still carry their original category string and are
+matched by name.

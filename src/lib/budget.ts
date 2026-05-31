@@ -10,6 +10,8 @@ export const CONTACTS_D_TAG = 'notebudget/contacts';
 export const PARTNERS_D_TAG = 'budgetstr/partners';
 /** NIP-78 application-data identifier for the private piggy bank accounts list. */
 export const PIGGYBANK_D_TAG = 'budgetstr/piggybank';
+/** NIP-78 application-data identifier for the private category budgets list. */
+export const CATEGORIES_D_TAG = 'budgetstr/categories';
 
 export type EntryType = 'expense' | 'income';
 
@@ -102,8 +104,8 @@ export interface PiggyBankAccount {
 /** Common currencies for the picker. */
 export const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'BTC', 'SATS'] as const;
 
-/** Suggested categories. */
-export const CATEGORIES = [
+/** Default categories used when the user hasn't customized their list. */
+export const DEFAULT_CATEGORIES = [
   'Food',
   'Housing',
   'Transport',
@@ -115,6 +117,19 @@ export const CATEGORIES = [
   'Gift',
   'Other',
 ] as const;
+
+/**
+ * A user-defined category with an optional monthly budget.
+ * When `budget` is > 0, expenses in this category are tracked against it.
+ */
+export interface CategoryBudget {
+  /** Category name (unique within the list). */
+  name: string;
+  /** Monthly budget amount (0 = no budget set). */
+  budget: number;
+  /** Currency for the budget (defaults to the user's dominant currency). */
+  currency: string;
+}
 
 /** Format a money amount for display. */
 export function formatAmount(amount: number, currency: string): string {

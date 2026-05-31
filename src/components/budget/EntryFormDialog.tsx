@@ -21,14 +21,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  CATEGORIES,
   CURRENCIES,
   RECURRENCES,
+  DEFAULT_CATEGORIES,
   type BudgetEntry,
   type BudgetEntryPayload,
   type EntryType,
   type Recurrence,
 } from '@/lib/budget';
+import { useCategories } from '@/hooks/useCategories';
 import { useSaveEntry } from '@/hooks/useEntryMutations';
 import { useToast } from '@/hooks/useToast';
 
@@ -43,7 +44,13 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export function EntryFormDialog({ open, onOpenChange, entry }: EntryFormDialogProps) {
   const { mutateAsync: saveEntry, isPending } = useSaveEntry();
+  const { data: userCategories } = useCategories();
   const { toast } = useToast();
+
+  // Use the user's custom categories if available, fall back to defaults.
+  const categoryNames = userCategories && userCategories.length > 0
+    ? userCategories.map((c) => c.name)
+    : [...DEFAULT_CATEGORIES];
 
   const [type, setType] = useState<EntryType>('expense');
   const [title, setTitle] = useState('');
@@ -194,7 +201,7 @@ export function EntryFormDialog({ open, onOpenChange, entry }: EntryFormDialogPr
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((c) => (
+                  {categoryNames.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
