@@ -1,4 +1,5 @@
-import { ChevronDown, LogOut, UserIcon, UserPlus } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, LogOut, QrCode, UserIcon, UserPlus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.tsx'
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { useLoggedInAccounts, type Account } from '@/hooks/useLoggedInAccounts';
 import { genUserName } from '@/lib/genUserName';
+import { NpubQrDialog } from '@/components/budget/NpubQrDialog';
 
 interface AccountSwitcherProps {
   onAddAccountClick: () => void;
@@ -17,6 +19,7 @@ interface AccountSwitcherProps {
 
 export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
   const { currentUser, otherUsers, isLoading, setLogin, removeLogin } = useLoggedInAccounts();
+  const [qrOpen, setQrOpen] = useState(false);
 
   if (!currentUser) return null;
 
@@ -84,6 +87,13 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
         })}
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          onClick={() => setQrOpen(true)}
+          className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
+        >
+          <QrCode className='w-4 h-4' />
+          <span>Share my npub</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
           onClick={onAddAccountClick}
           className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
         >
@@ -98,6 +108,8 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
+
+      <NpubQrDialog open={qrOpen} onOpenChange={setQrOpen} pubkey={currentUser.pubkey} />
     </DropdownMenu>
   );
 }

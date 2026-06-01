@@ -1,5 +1,16 @@
-import { useState } from 'react';
-import { Eye, EyeOff, Loader2, ShieldCheck, Sparkles, Copy, Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  Eye,
+  EyeOff,
+  Fingerprint,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+  Copy,
+  Check,
+  KeyRound,
+  ArrowLeft,
+} from 'lucide-react';
 import { generateSecretKey, getPublicKey, nip19 } from 'nostr-tools';
 
 import { Button } from '@/components/ui/button';
@@ -8,17 +19,29 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLoginActions } from '@/hooks/useLoginActions';
 import { useToast } from '@/hooks/useToast';
+import {
+  createPasskeyAndStoreNsec,
+  hasStoredPasskey,
+  isPasskeySupported,
+  signInWithPasskey,
+} from '@/lib/passkey';
 
 const validateNsec = (nsec: string) => /^nsec1[a-z0-9]{58}$/i.test(nsec.trim());
 
 /**
- * A budget-app-tailored login surface designed to play nicely with password
- * managers and passkey-style credential storage.
+ * The login surface. Three paths in to the app:
  *
- * The nsec is treated as a *password*: we render a real <form> with a hidden
- * username field and a password input marked with the appropriate autocomplete
- * hints. This lets 1Password, Bitwarden, iCloud Keychain and browser-native
- * managers offer to save/fill the nsec exactly like any other credential.
+ *   1. Passkey (top — recommended): create a new account or sign in using a
+ *      Google Passkey / iCloud Keychain / Windows Hello passkey. The user's
+ *      nsec is encrypted with a key derived from the passkey via WebAuthn's
+ *      PRF extension and stored on-device. The user is also shown the nsec
+ *      so they can back it up.
+ *
+ *   2. Log in with an existing nsec (tab): credential form for password
+ *      managers — they auto-fill via the username/current-password fields.
+ *
+ *   3. Create a new account by generating a fresh nsec and saving it to
+ *      a password manager (tab).
  */
 export function BudgetLogin() {
   const login = useLoginActions();
@@ -32,16 +55,41 @@ export function BudgetLogin() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // --- Create state ---
+  // --- Create-with-nsec state ---
   const [generated, setGenerated] = useState('');
   const [copied, setCopied] = useState(false);
 
+  // --- Passkey state ---
+  const passkeySupported = isPasskeySupported();
+  const [passkeyVaultExists, setPasskeyVaultExists] = useState(false);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  /** When set, we've just created a passkey-backed account and are showing
+   *  the freshly-generated nsec for the user to back up before continuing. */
+  const [passkeyBackupNsec, setPasskeyBackupNsec] = useState('');
+  const [passkeyBackupCopied, setPasskeyBackupCopied] = useState(false);
+  const [showBackupKey, setShowBackupKey] = useState(false);
+
+  useEffect(() => {
+    if (!passkeySupported) return;
+    let cancelled = false;
+    hasStoredPasskey().then((exists) => {
+      if (!cancelled) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPasskeyVaultExists(exists);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [passkeySupported]);
+
   const username = generated
     ? nip19.npubEncode(getPublicKey(nip19.decode(generated).data as Uint8Array))
-      : nsec && validateNsec(nsec)
+    : nsec && validateNsec(nsec)
       ? safeNpub(nsec)
       : 'budgetstr';
 
+  // ---------------------------------------------------------------------------
+  // Existing nsec login
+  // ---------------------------------------------------------------------------
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateNsec(nsec)) {
@@ -53,8 +101,6 @@ export function BudgetLogin() {
     setTimeout(() => {
       try {
         login.nsec(nsec.trim());
-        // Successful submit of the credential form lets the password manager
-        // prompt to save it.
       } catch {
         setError("Couldn't log in with this key.");
         setBusy(false);
@@ -62,6 +108,9 @@ export function BudgetLogin() {
     }, 50);
   };
 
+  // ---------------------------------------------------------------------------
+  // Create-by-saving-nsec flow
+  // ---------------------------------------------------------------------------
   const generate = () => {
     const sk = generateSecretKey();
     setGenerated(nip19.nsecEncode(sk));
@@ -92,9 +141,138 @@ export function BudgetLogin() {
     }, 50);
   };
 
+  // ---------------------------------------------------------------------------
+  // Passkey flows
+  // ---------------------------------------------------------------------------
+  const handlePasskeyCreate = async () => {
+    setPasskeyBusy(true);
+    try {
+      const sk = generateSecretKey();
+      const newNsec = nip19.nsecEncode(sk);
+      const npub = nip19.npubEncode(getPublicKey(sk));
+      // Use the npub as the displayed username inside the passkey UI so the
+      // user can tell budgetstr passkeys apart from others on their device.
+      await createPasskeyAndStoreNsec(newNsec, { username: `budgetstr (${npub.slice(0, 12)}…)` });
+      setPasskeyBackupNsec(newNsec);
+      setPasskeyVaultExists(true);
+    } catch (err) {
+      toast({
+        title: 'Could not create passkey',
+        description: err instanceof Error ? err.message : undefined,
+        variant: 'destructive',
+      });
+    } finally {
+      setPasskeyBusy(false);
+    }
+  };
+
+  const handlePasskeySignIn = async () => {
+    setPasskeyBusy(true);
+    try {
+      const recoveredNsec = await signInWithPasskey();
+      login.nsec(recoveredNsec);
+    } catch (err) {
+      toast({
+        title: 'Passkey sign-in failed',
+        description: err instanceof Error ? err.message : undefined,
+        variant: 'destructive',
+      });
+      setPasskeyBusy(false);
+    }
+  };
+
+  const finishPasskeyBackup = () => {
+    if (!passkeyBackupNsec) return;
+    try {
+      login.nsec(passkeyBackupNsec);
+    } catch {
+      toast({ title: 'Could not log in', variant: 'destructive' });
+    }
+  };
+
+  const copyPasskeyBackupNsec = async () => {
+    try {
+      await navigator.clipboard.writeText(passkeyBackupNsec);
+      setPasskeyBackupCopied(true);
+      setTimeout(() => setPasskeyBackupCopied(false), 2000);
+    } catch {
+      toast({ title: 'Copy failed', variant: 'destructive' });
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // Backup screen — shown right after a passkey-backed account is created
+  // ---------------------------------------------------------------------------
+  if (passkeyBackupNsec) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <div className="text-center mb-6 flex flex-col items-center">
+          <img
+            src="/logo.jpg"
+            alt="budgetstr"
+            className="size-20 rounded-2xl object-cover shadow-lg shadow-primary/25 mb-3"
+          />
+          <h1 className="text-2xl font-bold tracking-tight">Back up your key</h1>
+          <p className="text-muted-foreground mt-2 text-sm max-w-sm">
+            Your account is secured by a passkey on this device. Save your secret
+            key (nsec) somewhere safe — you'll need it to log in on a different
+            device or if you lose your passkey.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border bg-card shadow-sm p-6 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="backup-nsec">Your secret key (nsec)</Label>
+            <div className="relative">
+              <Input
+                id="backup-nsec"
+                type={showBackupKey ? 'text' : 'password'}
+                value={passkeyBackupNsec}
+                readOnly
+                className="pr-20 font-mono text-base md:text-sm"
+              />
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
+                <button
+                  type="button"
+                  onClick={() => setShowBackupKey((s) => !s)}
+                  className="px-2 text-muted-foreground hover:text-foreground"
+                  aria-label={showBackupKey ? 'Hide key' : 'Show key'}
+                >
+                  {showBackupKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={copyPasskeyBackupNsec}
+                  className="px-2 text-muted-foreground hover:text-foreground"
+                  aria-label="Copy key"
+                >
+                  {passkeyBackupCopied ? <Check className="size-4 text-primary" /> : <Copy className="size-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3">
+            <p className="text-xs text-amber-300">
+              Without this key, you cannot recover your account if your device is
+              lost. Store it in a password manager or write it down.
+            </p>
+          </div>
+
+          <Button onClick={finishPasskeyBackup} className="w-full h-11">
+            I've saved it — continue
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Main login surface
+  // ---------------------------------------------------------------------------
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 flex flex-col items-center">
         <img
           src="/logo.jpg"
           alt="budgetstr"
@@ -105,6 +283,52 @@ export function BudgetLogin() {
           Private, encrypted budgeting on Nostr.
         </p>
       </div>
+
+      {/* Passkey card — only when supported */}
+      {passkeySupported && (
+        <div className="rounded-2xl border bg-card shadow-sm p-5 mb-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <Fingerprint className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">
+                {passkeyVaultExists ? 'Continue with passkey' : 'Create account with passkey'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {passkeyVaultExists
+                  ? 'Sign in with your fingerprint, face, or screen lock.'
+                  : 'Use your Google account, fingerprint, or face to create an encrypted account on this device.'}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            onClick={passkeyVaultExists ? handlePasskeySignIn : handlePasskeyCreate}
+            className="w-full h-11"
+            disabled={passkeyBusy}
+          >
+            {passkeyBusy ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <>
+                <Fingerprint className="size-4 mr-2" />
+                {passkeyVaultExists ? 'Sign in with passkey' : 'Set up a passkey'}
+              </>
+            )}
+          </Button>
+
+          {passkeyVaultExists && (
+            <button
+              type="button"
+              onClick={() => setPasskeyVaultExists(false)}
+              className="w-full text-xs text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
+            >
+              <ArrowLeft className="size-3" /> Use a different account
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="rounded-2xl border bg-card shadow-sm p-6">
         <Tabs value={tab} onValueChange={(v) => { setTab(v as 'login' | 'create'); setError(''); }}>
@@ -158,7 +382,7 @@ export function BudgetLogin() {
               </div>
 
               <Button type="submit" className="w-full h-11" disabled={busy || !nsec.trim()}>
-                {busy ? <Loader2 className="size-4 animate-spin" /> : 'Log in'}
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <><KeyRound className="size-4 mr-2" /> Log in</>}
               </Button>
             </form>
           </TabsContent>
@@ -225,8 +449,8 @@ export function BudgetLogin() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
-                    <p className="text-xs text-amber-900 dark:text-amber-300">
+                  <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3">
+                    <p className="text-xs text-amber-300">
                       This key is your only way in. Save it in your password manager now — there is
                       no recovery if it's lost.
                     </p>
