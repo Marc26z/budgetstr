@@ -338,3 +338,79 @@ export async function signInWithPasskey(): Promise<string> {
 
   return new TextDecoder().decode(plaintext);
 }
+
+/**
+ * Re-attach an existing passkey to this device by re-encrypting the user's
+ * supplied nsec with the passkey's PRF secret.
+ *
+ * This is the "I already have a passkey on another device, sign me in here"
+ * flow. WebAuthn passkeys themselves contain no extractable bytes — they only
+ * yield a deterministic PRF secret per credential. To rebuild the local
+ * encrypted vault on a new device we need the nsec once (from the user's
+ * password manager / written backup), which we then re-encrypt with the PRF
+ * key derived from the passkey assertion.
+ *
+ * Uses a *discoverable* assertion (no `allowCredentials`) so the platform
+ * presents any synced passkey for this RP — including ones created on a
+ * different device. After this resolves, future sign-ins on this device can
+ * use the simple `signInWithPasskey()` path.
+ *
+ * Throws if PRF is unavailable, the user cancels, or the platform supplies
+ * no passkey.
+ */
+export async function reattachPasskey(nsec: string): Promise<void> {
+  if (!isPasskeySupported()) {
+    throw new Error('Passkeys are not supported on this device.');
+  }
+
+  let assertion: PublicKeyCredential | null;
+  try {
+    assertion = (await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rpId: getRpId(),
+        // No allowCredentials: invite the platform to show every synced
+        // passkey for this RP so the user can pick the right one.
+        userVerification: 'required',
+        timeout: 60_000,
+        extensions: {
+          prf: { eval: { first: PRF_SALT } },
+        } as AuthenticationExtensionsClientInputs,
+      },
+      // Hint: prefer the platform/synced authenticator UI when supported.
+      mediation: 'optional',
+    } as CredentialRequestOptions)) as PublicKeyCredential | null;
+  } catch (err) {
+    if (err instanceof Error && err.name === 'NotAllowedError') {
+      throw new Error('Passkey sign-in was cancelled.');
+    }
+    throw err;
+  }
+
+  if (!assertion) {
+    throw new Error('No passkey was selected.');
+  }
+
+  const prf = extractPrfResult(assertion);
+  if (!prf) {
+    throw new Error(
+      'Could not derive an encryption key from this passkey. The passkey provider may not support the PRF extension.',
+    );
+  }
+
+  const credentialId = bufToB64url(assertion.rawId);
+  const aesKey = await importPrfKey(prf);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    aesKey,
+    new TextEncoder().encode(nsec),
+  );
+
+  await saveVault({
+    credentialId,
+    iv: bufToB64url(iv),
+    ciphertext: bufToB64url(ciphertext),
+    createdAt: new Date().toISOString(),
+  });
+}

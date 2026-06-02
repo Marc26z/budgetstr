@@ -23,6 +23,7 @@ import {
   createPasskeyAndStoreNsec,
   hasStoredPasskey,
   isPasskeySupported,
+  reattachPasskey,
   signInWithPasskey,
 } from '@/lib/passkey';
 
@@ -68,6 +69,11 @@ export function BudgetLogin() {
   const [passkeyBackupNsec, setPasskeyBackupNsec] = useState('');
   const [passkeyBackupCopied, setPasskeyBackupCopied] = useState(false);
   const [showBackupKey, setShowBackupKey] = useState(false);
+  /** Open the inline "re-attach a synced passkey" form. */
+  const [reattachOpen, setReattachOpen] = useState(false);
+  const [reattachNsec, setReattachNsec] = useState('');
+  const [reattachError, setReattachError] = useState('');
+  const [showReattachKey, setShowReattachKey] = useState(false);
 
   useEffect(() => {
     if (!passkeySupported) return;
@@ -177,6 +183,34 @@ export function BudgetLogin() {
         description: err instanceof Error ? err.message : undefined,
         variant: 'destructive',
       });
+      setPasskeyBusy(false);
+    }
+  };
+
+  /**
+   * Re-attach an existing (synced) passkey to this device. WebAuthn passkeys
+   * never expose extractable bytes, so to bootstrap the local encrypted vault
+   * here we need the nsec once. After the user's passkey signs the assertion,
+   * the PRF secret encrypts the supplied nsec and stores the new vault — and
+   * subsequent sign-ins on this device use the simple passkey path.
+   */
+  const handleReattach = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateNsec(reattachNsec)) {
+      setReattachError('Enter a valid secret key starting with nsec1.');
+      return;
+    }
+    setPasskeyBusy(true);
+    setReattachError('');
+    try {
+      await reattachPasskey(reattachNsec.trim());
+      // Vault is now stored locally; complete the login.
+      login.nsec(reattachNsec.trim());
+      setReattachOpen(false);
+      setReattachNsec('');
+      setPasskeyVaultExists(true);
+    } catch (err) {
+      setReattachError(err instanceof Error ? err.message : 'Could not link the passkey.');
       setPasskeyBusy(false);
     }
   };
@@ -293,39 +327,122 @@ export function BudgetLogin() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold">
-                {passkeyVaultExists ? 'Continue with passkey' : 'Create account with passkey'}
+                {passkeyVaultExists ? 'Continue with passkey' : 'Use a passkey'}
               </p>
               <p className="text-xs text-muted-foreground">
                 {passkeyVaultExists
                   ? 'Sign in with your fingerprint, face, or screen lock.'
-                  : 'Use your Google account, fingerprint, or face to create an encrypted account on this device.'}
+                  : 'Sign in with an existing passkey, or create a new account.'}
               </p>
             </div>
           </div>
 
-          <Button
-            onClick={passkeyVaultExists ? handlePasskeySignIn : handlePasskeyCreate}
-            className="w-full h-11"
-            disabled={passkeyBusy}
-          >
-            {passkeyBusy ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <>
+          {passkeyVaultExists ? (
+            // Vault on this device — single-tap sign-in.
+            <>
+              <Button
+                onClick={handlePasskeySignIn}
+                className="w-full h-11"
+                disabled={passkeyBusy}
+              >
+                {passkeyBusy ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <>
+                    <Fingerprint className="size-4 mr-2" />
+                    Sign in with passkey
+                  </>
+                )}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setPasskeyVaultExists(false)}
+                className="w-full text-xs text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
+              >
+                <ArrowLeft className="size-3" /> Use a different account
+              </button>
+            </>
+          ) : reattachOpen ? (
+            // No local vault but the user has a passkey from another device.
+            // Re-attach it by re-encrypting their nsec with the PRF secret.
+            <form onSubmit={handleReattach} className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Paste your secret key once to link your passkey on this device. Future
+                sign-ins won't need it.
+              </p>
+              <div className="relative">
+                <Input
+                  type={showReattachKey ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={reattachNsec}
+                  onChange={(e) => { setReattachNsec(e.target.value); if (reattachError) setReattachError(''); }}
+                  placeholder="nsec1…"
+                  className="pr-10 font-mono text-base md:text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowReattachKey((s) => !s)}
+                  className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
+                  aria-label={showReattachKey ? 'Hide key' : 'Show key'}
+                >
+                  {showReattachKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              {reattachError && <p className="text-sm text-destructive">{reattachError}</p>}
+              <Button
+                type="submit"
+                className="w-full h-11"
+                disabled={passkeyBusy || !reattachNsec.trim()}
+              >
+                {passkeyBusy ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <>
+                    <Fingerprint className="size-4 mr-2" />
+                    Link &amp; sign in
+                  </>
+                )}
+              </Button>
+              <button
+                type="button"
+                onClick={() => {
+                  setReattachOpen(false);
+                  setReattachNsec('');
+                  setReattachError('');
+                }}
+                className="w-full text-xs text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
+              >
+                <ArrowLeft className="size-3" /> Back
+              </button>
+            </form>
+          ) : (
+            // No local vault — primary CTA is "Sign in with existing passkey",
+            // secondary is creating a brand-new account.
+            <>
+              <Button
+                onClick={() => { setReattachOpen(true); setReattachError(''); }}
+                className="w-full h-11"
+                disabled={passkeyBusy}
+              >
                 <Fingerprint className="size-4 mr-2" />
-                {passkeyVaultExists ? 'Sign in with passkey' : 'Set up a passkey'}
-              </>
-            )}
-          </Button>
-
-          {passkeyVaultExists && (
-            <button
-              type="button"
-              onClick={() => setPasskeyVaultExists(false)}
-              className="w-full text-xs text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
-            >
-              <ArrowLeft className="size-3" /> Use a different account
-            </button>
+                Sign in with existing passkey
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handlePasskeyCreate}
+                className="w-full h-11"
+                disabled={passkeyBusy}
+              >
+                {passkeyBusy ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <>
+                    <Sparkles className="size-4 mr-2" />
+                    Create new account with passkey
+                  </>
+                )}
+              </Button>
+            </>
           )}
         </div>
       )}
