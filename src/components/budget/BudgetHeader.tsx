@@ -1,4 +1,4 @@
-import { Heart, PiggyBank, Tag, Users } from 'lucide-react';
+import { Heart, PiggyBank, Tag, Users, Wallet } from 'lucide-react';
 
 import { LoginArea } from '@/components/auth/LoginArea';
 import { Button } from '@/components/ui/button';
@@ -8,9 +8,16 @@ interface BudgetHeaderProps {
   onManagePartners: () => void;
   onManagePiggyBank: () => void;
   onManageCategories: () => void;
+  onManageCash: () => void;
 }
 
-export function BudgetHeader({ onManageContacts, onManagePartners, onManagePiggyBank, onManageCategories }: BudgetHeaderProps) {
+export function BudgetHeader({
+  onManageContacts,
+  onManagePartners,
+  onManagePiggyBank,
+  onManageCategories,
+  onManageCash,
+}: BudgetHeaderProps) {
   return (
     <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-3xl px-4 h-16 flex items-center justify-between gap-2">
@@ -24,6 +31,15 @@ export function BudgetHeader({ onManageContacts, onManagePartners, onManagePiggy
         </div>
 
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onManageCash}
+            aria-label="Cash on hand"
+            title="Cash on hand"
+          >
+            <Wallet className="size-5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"

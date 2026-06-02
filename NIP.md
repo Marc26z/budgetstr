@@ -181,3 +181,29 @@ used (Food, Housing, Transport, Utilities, Health, Entertainment, Shopping,
 Salary, Gift, Other) — all with `budget: 0` (no limit). Entries created before
 categories were customized still carry their original category string and are
 matched by name.
+
+## Cash holdings
+
+A private list of physical or digital cash balances the user holds on hand
+(a wallet, a stash, a Cash App balance, etc.). Each holding has a label, an
+amount, a currency, and a `paper` flag distinguishing physical paper money
+from digital cash. The dashboard displays a "Cash on hand" card alongside
+Balance / Income / Expenses, and breaks the total into Paper / Digital
+subtotals when both kinds are present.
+
+- **Kind**: `30078` (NIP-78 application-specific data, addressable)
+- **`d` tag**: `budgetstr/cash`
+- **Content**: NIP-44 ciphertext (encrypted to self) of a JSON array:
+
+```json
+[
+  { "id": "uuid", "label": "Wallet",   "amount": 120, "currency": "USD", "paper": true  },
+  { "id": "uuid", "label": "Cash App", "amount": 50,  "currency": "USD", "paper": false }
+]
+```
+
+- **`alt` tag**: `"budgetstr cash holdings"`.
+
+Cash holdings are tracked separately from the income/expense flow — adding
+or editing them does not affect the monthly Balance, Income, or Expense
+totals.

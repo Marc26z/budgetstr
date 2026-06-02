@@ -12,6 +12,8 @@ export const PARTNERS_D_TAG = 'budgetstr/partners';
 export const PIGGYBANK_D_TAG = 'budgetstr/piggybank';
 /** NIP-78 application-data identifier for the private category budgets list. */
 export const CATEGORIES_D_TAG = 'budgetstr/categories';
+/** NIP-78 application-data identifier for the private cash holdings list. */
+export const CASH_D_TAG = 'budgetstr/cash';
 
 export type EntryType = 'expense' | 'income';
 
@@ -88,6 +90,24 @@ export const PIGGYBANK_PROVIDERS = [
   { id: 'albyhub', label: 'Alby Hub', placeholder: 'username@getalby.com' },
   { id: 'custom', label: 'Other', placeholder: 'username@domain.com' },
 ] as const;
+
+/**
+ * A cash balance the user holds on hand — could be a physical wallet,
+ * a digital app balance (Cash App, Venmo, etc.), or a stash. The `paper`
+ * flag distinguishes physical paper money from digital cash equivalents.
+ */
+export interface CashHolding {
+  /** UUID. */
+  id: string;
+  /** Human-friendly label (e.g. "Wallet", "Safe", "Cash App"). */
+  label: string;
+  /** Amount on hand. */
+  amount: number;
+  /** Currency code. */
+  currency: string;
+  /** True if this is physical paper money / coins, false if digital cash. */
+  paper: boolean;
+}
 
 /** A saved lightning address the user sends monthly savings to. */
 export interface PiggyBankAccount {
