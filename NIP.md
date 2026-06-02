@@ -207,3 +207,66 @@ subtotals when both kinds are present.
 Cash holdings are tracked separately from the income/expense flow — adding
 or editing them does not affect the monthly Balance, Income, or Expense
 totals.
+
+## Investments
+
+Tracked investment balances (brokerages, crypto wallets, retirement accounts,
+real estate, etc.). Each investment has a label, current market value,
+currency, type, and an optional cost basis used to display unrealized
+gain/loss in the dashboard.
+
+- **Kind**: `30078` (NIP-78 application-specific data, addressable)
+- **`d` tag**: `budgetstr/investments`
+- **Content**: NIP-44 ciphertext (encrypted to self) of a JSON array:
+
+```json
+[
+  {
+    "id": "uuid",
+    "label": "Vanguard IRA",
+    "currentValue": 42000,
+    "currency": "USD",
+    "type": "retirement",
+    "costBasis": 30000
+  }
+]
+```
+
+- **`alt` tag**: `"budgetstr investments"`.
+
+`type` is one of `stocks` · `crypto` · `retirement` · `real_estate` · `other`.
+
+## Debts
+
+Outstanding debts owed by the user (mortgage, credit cards, student loans,
+etc.). Each debt has a label, balance owed, currency, type, and optional
+APR / minimum monthly payment fields.
+
+- **Kind**: `30078` (NIP-78 application-specific data, addressable)
+- **`d` tag**: `budgetstr/debts`
+- **Content**: NIP-44 ciphertext (encrypted to self) of a JSON array:
+
+```json
+[
+  {
+    "id": "uuid",
+    "label": "Chase Visa",
+    "balance": 2500,
+    "currency": "USD",
+    "type": "credit_card",
+    "apr": 22.99,
+    "minPayment": 75
+  }
+]
+```
+
+- **`alt` tag**: `"budgetstr debts"`.
+
+`type` is one of `mortgage` · `credit_card` · `student_loan` · `auto_loan` ·
+`personal_loan` · `medical` · `other`.
+
+## Net worth
+
+The dashboard derives a net-worth headline as
+`cash + investments − debts`, computed in the user's dominant currency.
+This is purely a derived view — no additional Nostr events are stored.

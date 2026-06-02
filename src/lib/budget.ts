@@ -14,6 +14,10 @@ export const PIGGYBANK_D_TAG = 'budgetstr/piggybank';
 export const CATEGORIES_D_TAG = 'budgetstr/categories';
 /** NIP-78 application-data identifier for the private cash holdings list. */
 export const CASH_D_TAG = 'budgetstr/cash';
+/** NIP-78 application-data identifier for the private investments list. */
+export const INVESTMENTS_D_TAG = 'budgetstr/investments';
+/** NIP-78 application-data identifier for the private debts list. */
+export const DEBTS_D_TAG = 'budgetstr/debts';
 
 export type EntryType = 'expense' | 'income';
 
@@ -90,6 +94,77 @@ export const PIGGYBANK_PROVIDERS = [
   { id: 'albyhub', label: 'Alby Hub', placeholder: 'username@getalby.com' },
   { id: 'custom', label: 'Other', placeholder: 'username@domain.com' },
 ] as const;
+
+/** Recognized investment categories. */
+export const INVESTMENT_TYPES = [
+  { id: 'stocks', label: 'Stocks' },
+  { id: 'crypto', label: 'Crypto' },
+  { id: 'retirement', label: 'Retirement' },
+  { id: 'real_estate', label: 'Real estate' },
+  { id: 'other', label: 'Other' },
+] as const;
+
+export type InvestmentType = typeof INVESTMENT_TYPES[number]['id'];
+
+/**
+ * A user-tracked investment balance (a brokerage account, crypto wallet,
+ * 401k, real estate, etc.). `currentValue` is the present market value;
+ * `costBasis` is optional — when provided, the dashboard shows
+ * unrealized gain/loss.
+ */
+export interface Investment {
+  /** UUID. */
+  id: string;
+  /** Human-friendly label (e.g. "Vanguard IRA", "Coinbase BTC"). */
+  label: string;
+  /** Current market value. */
+  currentValue: number;
+  /** Currency code. */
+  currency: string;
+  /** Investment category. */
+  type: InvestmentType;
+  /** Optional cost basis (what you paid). When set, P/L is shown. */
+  costBasis?: number;
+  /** Optional free-form note. */
+  note?: string;
+}
+
+/** Recognized debt categories. */
+export const DEBT_TYPES = [
+  { id: 'mortgage', label: 'Mortgage' },
+  { id: 'credit_card', label: 'Credit card' },
+  { id: 'student_loan', label: 'Student loan' },
+  { id: 'auto_loan', label: 'Auto loan' },
+  { id: 'personal_loan', label: 'Personal loan' },
+  { id: 'medical', label: 'Medical' },
+  { id: 'other', label: 'Other' },
+] as const;
+
+export type DebtType = typeof DEBT_TYPES[number]['id'];
+
+/**
+ * A user-tracked debt balance (mortgage, credit card, student loan, etc.).
+ * `balance` is the outstanding amount owed; optional `apr` and
+ * `minPayment` help the user see total monthly obligations.
+ */
+export interface Debt {
+  /** UUID. */
+  id: string;
+  /** Human-friendly label (e.g. "Chase Visa", "Mortgage"). */
+  label: string;
+  /** Outstanding balance owed. */
+  balance: number;
+  /** Currency code. */
+  currency: string;
+  /** Debt category. */
+  type: DebtType;
+  /** Optional APR as a percentage (e.g. 18.99). */
+  apr?: number;
+  /** Optional minimum monthly payment. */
+  minPayment?: number;
+  /** Optional free-form note. */
+  note?: string;
+}
 
 /**
  * A cash balance the user holds on hand — could be a physical wallet,
