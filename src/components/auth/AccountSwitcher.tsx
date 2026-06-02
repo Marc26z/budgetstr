@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ChevronDown, LogOut, QrCode, UserIcon, UserPlus } from 'lucide-react';
+import { ChevronDown, KeyRound, LogOut, QrCode, UserIcon, UserPlus } from 'lucide-react';
+import { useNostrLogin } from '@nostrify/react/login';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,16 +13,39 @@ import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { useLoggedInAccounts, type Account } from '@/hooks/useLoggedInAccounts';
 import { genUserName } from '@/lib/genUserName';
 import { NpubQrDialog } from '@/components/budget/NpubQrDialog';
+import { RevealNsecDialog } from '@/components/budget/RevealNsecDialog';
 
 interface AccountSwitcherProps {
   onAddAccountClick: () => void;
 }
 
+/**
+ * Pull a retrievable nsec out of the active login, if any.
+ *
+ * Only `type === 'nsec'` logins carry a recoverable bech32 secret key in
+ * `login.data.nsec`. Bunker logins store a *client* nsec used for NIP-46
+ * transport — exposing that would not give the user their account key, so
+ * we deliberately skip it. Extension logins never expose the private key.
+ */
+function getActiveNsec(login: unknown): string | null {
+  if (!login || typeof login !== 'object') return null;
+  const l = login as { type?: string; data?: { nsec?: unknown } };
+  if (l.type !== 'nsec') return null;
+  const nsec = l.data?.nsec;
+  return typeof nsec === 'string' ? nsec : null;
+}
+
 export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
   const { currentUser, otherUsers, isLoading, setLogin, removeLogin } = useLoggedInAccounts();
+  const { logins } = useNostrLogin();
   const [qrOpen, setQrOpen] = useState(false);
+  const [revealOpen, setRevealOpen] = useState(false);
 
   if (!currentUser) return null;
+
+  // The current login is always the first entry; if it's an nsec login we
+  // can offer "Reveal my secret key", otherwise that menu item is hidden.
+  const activeNsec = getActiveNsec(logins[0]);
 
   const getDisplayName = (account: Account): string => {
     return account.metadata.name ?? genUserName(account.pubkey);
@@ -93,6 +117,15 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           <QrCode className='w-4 h-4' />
           <span>Share my npub</span>
         </DropdownMenuItem>
+        {activeNsec && (
+          <DropdownMenuItem
+            onClick={() => setRevealOpen(true)}
+            className='flex items-center gap-2 cursor-pointer p-2 rounded-md text-amber-400 focus:text-amber-300'
+          >
+            <KeyRound className='w-4 h-4' />
+            <span>Reveal my secret key</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={onAddAccountClick}
           className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
@@ -110,6 +143,9 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
       </DropdownMenuContent>
 
       <NpubQrDialog open={qrOpen} onOpenChange={setQrOpen} pubkey={currentUser.pubkey} />
+      {activeNsec && (
+        <RevealNsecDialog open={revealOpen} onOpenChange={setRevealOpen} nsec={activeNsec} />
+      )}
     </DropdownMenu>
   );
 }
